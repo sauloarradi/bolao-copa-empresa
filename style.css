@@ -704,3 +704,74 @@ grid-template-columns:repeat(2,1fr);
 }
 
 }
+
+
+/* Ajustes V6 - Correção mobile da aba Regras */
+html,
+body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.screen,
+.rules-grid,
+.rule-card,
+.home-card,
+.group-card,
+.empty-state,
+.ranking-item,
+.bet-item,
+.summary,
+.phase-card,
+.deadline-box {
+    max-width: 100%;
+}
+
+.rules-grid {
+    width: 100%;
+    grid-template-columns: 1fr;
+    overflow: visible;
+}
+
+.rule-card {
+    width: 100%;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.rule-card p,
+.rule-card li,
+.rule-card small {
+    overflow-wrap: anywhere;
+}
+
+.phase-flow {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    overflow: visible;
+}
+
+.phase-flow span {
+    white-space: normal;
+    text-align: center;
+    width: 100%;
+}
+
+@media(min-width:900px){
+    .rules-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .phase-flow{
+        display:flex;
+        overflow:auto;
+    }
+
+    .phase-flow span{
+        white-space:nowrap;
+        width:auto;
+    }
+}

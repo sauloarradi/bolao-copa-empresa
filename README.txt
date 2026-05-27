@@ -6,7 +6,7 @@ Implementações da V5:
 - Controle de fase atual.
 - Suporte visual para:
   - Fase de grupos aberta.
-  - Fase de grupos encerrada aguardando admin liberar 32-avos.
+  - Fase de grupos encerrada aguardando liberação 32-avos.
   - 32-avos aberto.
   - 32-avos encerrado.
 - Aba "Apostar" permanece visível, mas fica somente consulta quando a fase está bloqueada.
@@ -27,5 +27,5 @@ ROUND32_CLOSED
 
 Na versão final:
 - Esse status virá do banco SQL Server.
-- O admin poderá encerrar a fase atual, cadastrar os próximos confrontos e liberar a fase seguinte.
+- A gestão do bolão poderá encerrar a fase atual, cadastrar os próximos confrontos e liberar a fase seguinte.
 - As apostas serão bloqueadas por fase e por prazo.

@@ -8,8 +8,8 @@
 // ROUND32_OPEN      = 32-avos aberto para apostas
 // ROUND32_CLOSED    = 32-avos encerrado
 //
-// Para a apresentação, altere esta constante para demonstrar os cenários.
-const DEMO_PHASE_STATUS = 'GROUPS_CLOSED';
+// Para a apresentação ao chefe, altere esta constante para demonstrar os cenários.
+const DEMO_PHASE_STATUS = 'GROUPS_OPEN';
 
 const DEADLINE_GROUPS = new Date('2026-06-10T23:59:59');
 
@@ -34,15 +34,15 @@ const phasesData = {
   title: 'Fase de Grupos',
   open: false,
   waitingNextPhase: true,
-  deadlineText: 'Apostas da fase de grupos encerradas. Aguarde o admin cadastrar e liberar os jogos dos 32-avos.',
-  nextText: 'Agora você pode acompanhar resultados, pontuação e ranking. As próximas apostas serão liberadas quando o admin abrir os 32-avos.'
+  deadlineText: 'Apostas da fase de grupos encerradas. Aguarde a liberação dos jogos da fase de 32-avos de final.',
+  nextText: 'Agora você pode acompanhar resultados, pontuação e ranking. As próximas apostas serão liberadas quando os jogos dos 32-avos estiverem disponíveis.'
  },
  ROUND32_OPEN: {
   key: '32AVOS',
   title: '32-avos de Final',
   open: true,
   waitingNextPhase: false,
-  deadlineText: 'Apostas dos 32-avos liberadas. Preencha todos os jogos antes do novo prazo definido pelo administrador.',
+  deadlineText: 'Apostas dos 32-avos liberadas. Preencha todos os jogos antes do novo prazo definido para esta fase.',
   nextText: 'A fase de grupos já foi encerrada. Agora faça seus palpites para os jogos dos 32-avos de final.'
  },
  ROUND32_CLOSED: {
@@ -224,7 +224,7 @@ function renderGroups(){
   closedMessage.innerHTML = `
    <strong>🔒 Apostas bloqueadas para ${phase.title}</strong><br>
    Você ainda pode abrir os cards abaixo para consultar seus palpites.
-   Quando o administrador liberar a próxima fase, novos jogos aparecerão aqui para novas apostas.
+   Quando a próxima fase for liberada, novos jogos aparecerão aqui para novas apostas.
   `;
  }else{
   closedMessage.classList.add('hidden');
