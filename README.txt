@@ -1,23 +1,31 @@
-Bolão Copa 2026 - Protótipo V4
+Bolão Copa 2026 - Protótipo V5
 
-Principais mudanças:
-- Bloqueio automático das apostas após 10/06/2026 às 23:59.
-- Após o prazo, o usuário só consegue visualizar os palpites.
-- Barra de progresso vermelha enquanto estiver incompleto.
-- Barra verde apenas quando o grupo estiver 100% preenchido.
-- Tema claro e tema escuro com botão de alternância.
-- Tela "Minhas Apostas" reorganizada por grupo.
-- Filtros: Todos, Pendentes, Placar exato, Vencedor e Erros.
-- Melhor experiência mobile-first.
-- Resultados oficiais ainda são simulados para demonstração.
+Implementações da V5:
+- Nova aba "Regras" na navegação inferior.
+- Regras completas sobre pontuação, prazos, fases, bloqueio e desempate.
+- Controle de fase atual.
+- Suporte visual para:
+  - Fase de grupos aberta.
+  - Fase de grupos encerrada aguardando admin liberar 32-avos.
+  - 32-avos aberto.
+  - 32-avos encerrado.
+- Aba "Apostar" permanece visível, mas fica somente consulta quando a fase está bloqueada.
+- Mensagem clara quando a fase está encerrada e aguardando liberação da próxima.
+- Home agora mostra fase atual e próximos passos conforme o estado da fase.
+- Estrutura preparada para painel admin.
 
-Para simular o sistema após o prazo:
-Abra script.js e altere:
-const FORCE_CLOSED_FOR_DEMO = false;
-para:
-const FORCE_CLOSED_FOR_DEMO = true;
+Como demonstrar os cenários:
+Abra script.js e altere a constante:
 
-Na versão real:
-- Os grupos/jogos virão do SQL Server.
-- Os resultados oficiais serão cadastrados por painel admin ou importados por API.
-- A autenticação será feita via Protheus/TOTVS.
+const DEMO_PHASE_STATUS = 'GROUPS_OPEN';
+
+Opções:
+GROUPS_OPEN
+GROUPS_CLOSED
+ROUND32_OPEN
+ROUND32_CLOSED
+
+Na versão final:
+- Esse status virá do banco SQL Server.
+- O admin poderá encerrar a fase atual, cadastrar os próximos confrontos e liberar a fase seguinte.
+- As apostas serão bloqueadas por fase e por prazo.

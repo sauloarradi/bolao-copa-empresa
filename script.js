@@ -1,13 +1,61 @@
-// Data limite das apostas.
-// Regra solicitada: após o dia 10, o usuário não pode alterar mais nada.
-// Ajuste aqui futuramente caso a empresa defina outro horário oficial.
-const DEADLINE = new Date('2026-06-10T23:59:59');
+// -------------------------------
+// CONFIGURAÇÕES DE DEMONSTRAÇÃO
+// -------------------------------
 
-// Para apresentação antes do prazo, deixe false.
-// Para simular o sistema após o dia 10, altere para true.
-const FORCE_CLOSED_FOR_DEMO = false;
+// Fases possíveis:
+// GROUPS_OPEN       = fase de grupos aberta para apostas
+// GROUPS_CLOSED     = fase de grupos encerrada; aguardando admin liberar 32-avos
+// ROUND32_OPEN      = 32-avos aberto para apostas
+// ROUND32_CLOSED    = 32-avos encerrado
+//
+// Para a apresentação ao chefe, altere esta constante para demonstrar os cenários.
+const DEMO_PHASE_STATUS = 'GROUPS_OPEN';
 
-const groups = {
+const DEADLINE_GROUPS = new Date('2026-06-10T23:59:59');
+
+const phaseLabels = {
+ GROUPS_OPEN: 'Fase de Grupos',
+ GROUPS_CLOSED: 'Fase de Grupos',
+ ROUND32_OPEN: '32-avos de Final',
+ ROUND32_CLOSED: '32-avos de Final'
+};
+
+const phasesData = {
+ GROUPS_OPEN: {
+  key: 'GRUPOS',
+  title: 'Fase de Grupos',
+  open: true,
+  waitingNextPhase: false,
+  deadlineText: 'Apostas abertas até 10/06/2026 às 23:59.',
+  nextText: 'Preencha todos os grupos antes do prazo final. Após o dia 10, as apostas da fase de grupos serão bloqueadas.'
+ },
+ GROUPS_CLOSED: {
+  key: 'GRUPOS',
+  title: 'Fase de Grupos',
+  open: false,
+  waitingNextPhase: true,
+  deadlineText: 'Apostas da fase de grupos encerradas. Aguarde o admin cadastrar e liberar os jogos dos 32-avos.',
+  nextText: 'Agora você pode acompanhar resultados, pontuação e ranking. As próximas apostas serão liberadas quando o admin abrir os 32-avos.'
+ },
+ ROUND32_OPEN: {
+  key: '32AVOS',
+  title: '32-avos de Final',
+  open: true,
+  waitingNextPhase: false,
+  deadlineText: 'Apostas dos 32-avos liberadas. Preencha todos os jogos antes do novo prazo definido pelo administrador.',
+  nextText: 'A fase de grupos já foi encerrada. Agora faça seus palpites para os jogos dos 32-avos de final.'
+ },
+ ROUND32_CLOSED: {
+  key: '32AVOS',
+  title: '32-avos de Final',
+  open: false,
+  waitingNextPhase: true,
+  deadlineText: 'Apostas dos 32-avos encerradas. Aguarde a liberação das oitavas de final.',
+  nextText: 'Acompanhe sua pontuação e aguarde o administrador cadastrar os confrontos das oitavas de final.'
+ }
+};
+
+const groupStage = {
 'Grupo A': ['México','África do Sul','Coreia do Sul','Tchéquia'],
 'Grupo B': ['Canadá','Suíça','Qatar','Bósnia'],
 'Grupo C': ['Brasil','Escócia','Marrocos','Haiti'],
@@ -18,11 +66,38 @@ const groups = {
 'Grupo H': ['França','Senegal','Peru','Áustria']
 };
 
+const round32Stage = {
+'32-avos - Bloco 1': ['1º Grupo A','3º Grupo C/D/E','2º Grupo B','2º Grupo F'],
+'32-avos - Bloco 2': ['1º Grupo C','3º Grupo A/B/F','2º Grupo D','2º Grupo E'],
+'32-avos - Bloco 3': ['1º Grupo D','3º Grupo B/E/F','1º Grupo E','3º Grupo A/C/D'],
+'32-avos - Bloco 4': ['1º Grupo F','3º Grupo A/B/C','1º Grupo G','3º Grupo D/E/H']
+};
+
 let currentGroup = '';
 let currentFilter = 'all';
 
-function isBettingClosed(){
- return FORCE_CLOSED_FOR_DEMO || new Date() > DEADLINE;
+function currentPhase(){
+ const selected = phasesData[DEMO_PHASE_STATUS];
+
+ if(DEMO_PHASE_STATUS === 'GROUPS_OPEN' && new Date() > DEADLINE_GROUPS){
+  return phasesData.GROUPS_CLOSED;
+ }
+
+ return selected;
+}
+
+function activeStageData(){
+ const phase = currentPhase();
+
+ if(phase.key === '32AVOS'){
+  return round32Stage;
+ }
+
+ return groupStage;
+}
+
+function isBettingOpen(){
+ return currentPhase().open;
 }
 
 function login(){
@@ -47,7 +122,7 @@ function start(){
  document.getElementById('welcome').innerText =
  'Bem-vindo, matrícula ' + localStorage.getItem('user');
 
- renderDeadline();
+ renderPhaseHeader();
  renderGroups();
  renderBets();
  updateTotals();
@@ -58,7 +133,8 @@ function applySavedTheme(){
 
  if(theme === 'light'){
   document.body.classList.add('light');
-  document.getElementById('themeButton').innerText = '☀️ Tema';
+  const btn = document.getElementById('themeButton');
+  if(btn) btn.innerText = '☀️ Tema';
  }else{
   document.body.classList.remove('light');
   const btn = document.getElementById('themeButton');
@@ -72,16 +148,29 @@ function toggleTheme(){
  document.getElementById('themeButton').innerText = isLight ? '☀️ Tema' : '🌙 Tema';
 }
 
-function renderDeadline(){
+function renderPhaseHeader(){
+ const phase = currentPhase();
+
+ document.getElementById('currentPhaseName').innerText = phase.title;
+ document.getElementById('phaseStatusText').innerText =
+  phase.open ? 'Apostas abertas para a fase atual.' : 'Apostas bloqueadas para a fase atual.';
+
+ document.getElementById('nextStepsText').innerText = phase.nextText;
+
  const box = document.getElementById('deadlineBox');
 
- if(isBettingClosed()){
-  box.className = 'deadline-box deadline-closed';
-  box.innerHTML = '🔒 Apostas encerradas. Agora você pode apenas acompanhar seus palpites, resultados oficiais e pontuação.';
- }else{
+ if(phase.open){
   box.className = 'deadline-box deadline-open';
-  box.innerHTML = '✅ Apostas abertas até 10/06/2026 às 23:59. Após esse prazo, nenhuma alteração será permitida.';
+  box.innerHTML = '✅ ' + phase.deadlineText;
+ }else if(phase.waitingNextPhase){
+  box.className = 'deadline-box deadline-waiting';
+  box.innerHTML = '⏳ ' + phase.deadlineText;
+ }else{
+  box.className = 'deadline-box deadline-closed';
+  box.innerHTML = '🔒 ' + phase.deadlineText;
  }
+
+ document.getElementById('gamesScreenTitle').innerText = '⚽ ' + phase.title;
 }
 
 function createGames(teams){
@@ -95,28 +184,62 @@ function createGames(teams){
  ];
 }
 
-function gameKey(group, index){
- return group + '_' + index;
+function createRound32Games(teams){
+ return [
+  [teams[0],teams[1]],
+  [teams[2],teams[3]]
+ ];
 }
 
-function getSavedBet(group, index){
- return JSON.parse(localStorage.getItem(gameKey(group,index)) || '{}');
+function getGamesForBlock(blockName, teams){
+ const phase = currentPhase();
+
+ if(phase.key === '32AVOS'){
+  return createRound32Games(teams);
+ }
+
+ return createGames(teams);
+}
+
+function gameKey(block, index){
+ return currentPhase().key + '_' + block + '_' + index;
+}
+
+function getSavedBet(block, index){
+ return JSON.parse(localStorage.getItem(gameKey(block,index)) || '{}');
 }
 
 function renderGroups(){
+ renderPhaseHeader();
+
  const grid = document.getElementById('groupsGrid');
+ const closedMessage = document.getElementById('closedPhaseMessage');
+ const data = activeStageData();
+ const phase = currentPhase();
+
  grid.innerHTML = '';
+
+ if(!phase.open && phase.waitingNextPhase){
+  closedMessage.classList.remove('hidden');
+  closedMessage.innerHTML = `
+   <strong>🔒 Apostas bloqueadas para ${phase.title}</strong><br>
+   Você ainda pode abrir os cards abaixo para consultar seus palpites.
+   Quando o administrador liberar a próxima fase, novos jogos aparecerão aqui para novas apostas.
+  `;
+ }else{
+  closedMessage.classList.add('hidden');
+ }
 
  let completedGames = 0;
  let totalGames = 0;
 
- Object.keys(groups).forEach(group=>{
-   const games = createGames(groups[group]);
+ Object.keys(data).forEach(block=>{
+   const games = getGamesForBlock(block, data[block]);
    let completed = 0;
 
    games.forEach((g,i)=>{
      totalGames++;
-     const bet = getSavedBet(group,i);
+     const bet = getSavedBet(block,i);
      if(bet.a !== undefined && bet.b !== undefined){
        completed++;
        completedGames++;
@@ -125,19 +248,19 @@ function renderGroups(){
 
    const percent = Math.floor((completed/games.length)*100);
    const complete = percent === 100;
-   const closed = isBettingClosed();
+   const open = isBettingOpen();
 
    grid.innerHTML += `
    <div class="group-card">
 
      <div class="group-top">
-       <div class="group-title">${group}</div>
+       <div class="group-title">${block}</div>
        <div class="group-badge ${complete ? 'badge-ok' : 'badge-no'}">
         ${complete ? '✅ Completo' : '❌ Pendente'}
        </div>
      </div>
 
-     <div class="group-teams">${groups[group].join(' • ')}</div>
+     <div class="group-teams">${data[block].join(' • ')}</div>
 
      <div class="progress">
        <div class="progress-bar ${complete ? 'complete' : ''}" style="width:${percent}%"></div>
@@ -147,8 +270,8 @@ function renderGroups(){
        ${completed}/${games.length} jogos apostados • ${percent}%
      </div>
 
-     <button class="${closed ? 'view-only' : ''}" onclick="openGroup('${group}')">
-       ${closed ? 'Ver palpites' : 'Abrir grupo'}
+     <button class="${open ? '' : 'view-only'}" onclick="openGroup('${block}')">
+       ${open ? 'Abrir apostas' : 'Ver palpites'}
      </button>
 
    </div>
@@ -158,37 +281,38 @@ function renderGroups(){
  const globalPercent = totalGames ? Math.floor((completedGames/totalGames)*100) : 0;
  document.getElementById('progressText').innerText = globalPercent + '%';
  document.getElementById('homeStatus').innerText =
- `${completedGames}/${totalGames} jogos preenchidos. ${isBettingClosed() ? 'As apostas já estão bloqueadas.' : 'Finalize tudo antes do prazo.'}`;
+ `${completedGames}/${totalGames} jogos preenchidos na fase atual. ${isBettingOpen() ? 'Apostas abertas.' : 'Apostas bloqueadas.'}`;
 
  const homeBar = document.getElementById('homeProgressBar');
  homeBar.style.width = globalPercent + '%';
  homeBar.className = 'progress-bar ' + (globalPercent === 100 ? 'complete' : '');
 }
 
-function openGroup(group){
- currentGroup = group;
+function openGroup(block){
+ currentGroup = block;
 
  const gamesList = document.getElementById('gamesList');
  const title = document.getElementById('modalTitle');
  const hint = document.getElementById('modalHint');
  const saveBtn = document.getElementById('saveGroupButton');
+ const data = activeStageData();
 
- const closed = isBettingClosed();
+ const open = isBettingOpen();
 
- title.innerText = group;
- hint.innerText = closed
-  ? 'Apostas bloqueadas após o prazo. Esta tela está apenas para consulta.'
-  : 'Preencha todos os jogos do grupo e salve os palpites.';
+ title.innerText = block;
+ hint.innerText = open
+  ? 'Preencha todos os jogos desta fase e salve os palpites.'
+  : 'Apostas bloqueadas. Esta tela está apenas para consulta.';
 
- saveBtn.disabled = closed;
- saveBtn.innerText = closed ? 'Apostas bloqueadas' : 'Salvar apostas';
+ saveBtn.disabled = !open;
+ saveBtn.innerText = open ? 'Salvar apostas' : 'Apostas bloqueadas';
 
  gamesList.innerHTML = '';
 
- const games = createGames(groups[group]);
+ const games = getGamesForBlock(block, data[block]);
 
  games.forEach((g,i)=>{
-  const save = getSavedBet(group,i);
+  const save = getSavedBet(block,i);
 
   gamesList.innerHTML += `
    <div class="game-card">
@@ -197,18 +321,18 @@ function openGroup(group){
 
       <div class="team-name">${g[0]}</div>
 
-      <input type="number" min="0" class="score" id="a_${i}" value="${save.a ?? ''}" ${closed ? 'disabled' : ''}>
+      <input type="number" min="0" class="score" id="a_${i}" value="${save.a ?? ''}" ${open ? '' : 'disabled'}>
 
       <div>X</div>
 
-      <input type="number" min="0" class="score" id="b_${i}" value="${save.b ?? ''}" ${closed ? 'disabled' : ''}>
+      <input type="number" min="0" class="score" id="b_${i}" value="${save.b ?? ''}" ${open ? '' : 'disabled'}>
 
       <div class="team-name team-right">${g[1]}</div>
 
     </div>
 
     <div class="game-date">
-      Fase de grupos • Copa do Mundo 2026
+      ${currentPhase().title} • Copa do Mundo 2026
     </div>
 
    </div>
@@ -223,19 +347,20 @@ function closeModal(){
 }
 
 function saveGroup(){
- if(isBettingClosed()){
-  alert('As apostas estão encerradas. Não é possível alterar palpites após o dia 10.');
+ if(!isBettingOpen()){
+  alert('As apostas desta fase estão bloqueadas.');
   return;
  }
 
- const games = createGames(groups[currentGroup]);
+ const data = activeStageData();
+ const games = getGamesForBlock(currentGroup, data[currentGroup]);
 
  for(let i=0;i<games.length;i++){
    const a = document.getElementById('a_'+i).value;
    const b = document.getElementById('b_'+i).value;
 
    if(a === '' || b === ''){
-    alert('Preencha todos os jogos do grupo.');
+    alert('Preencha todos os jogos.');
     return;
    }
 
@@ -263,9 +388,7 @@ function saveGroup(){
  alert('Apostas salvas com sucesso.');
 }
 
-function getDemoResult(group, index){
- // Resultados simulados para demonstrar a tela de acompanhamento.
- // Na versão real, isso virá do banco/API administrativa.
+function getDemoResult(block, index){
  if(index % 5 === 1) return null;
 
  const results = [
@@ -285,8 +408,8 @@ function outcome(a,b){
  return Number(a) > Number(b) ? 'A' : 'B';
 }
 
-function evaluateBet(group,index,bet){
- const real = getDemoResult(group,index);
+function evaluateBet(block,index,bet){
+ const real = getDemoResult(block,index);
 
  if(!real){
   return {
@@ -334,23 +457,24 @@ function setFilter(filter, element){
 
 function renderBets(){
  const container = document.getElementById('betsContainer');
+ const data = activeStageData();
  container.innerHTML = '';
 
  let hasAny = false;
 
- Object.keys(groups).forEach(group=>{
-   const games = createGames(groups[group]);
+ Object.keys(data).forEach(block=>{
+   const games = getGamesForBlock(block, data[block]);
    let groupHtml = '';
    let count = 0;
 
    games.forEach((g,i)=>{
-     const bet = getSavedBet(group,i);
+     const bet = getSavedBet(block,i);
 
      if(bet.a === undefined || bet.b === undefined){
        return;
      }
 
-     const ev = evaluateBet(group,i,bet);
+     const ev = evaluateBet(block,i,bet);
 
      if(currentFilter !== 'all' && ev.status !== currentFilter){
        return;
@@ -390,7 +514,7 @@ function renderBets(){
      container.innerHTML += `
        <div class="bet-group">
          <div class="bet-group-title">
-          <strong>${group}</strong>
+          <strong>${block}</strong>
           <small>${count} jogo${count > 1 ? 's' : ''}</small>
          </div>
 
@@ -405,24 +529,25 @@ function renderBets(){
  if(!hasAny){
   container.innerHTML = `
     <div class="empty-state">
-      Nenhuma aposta encontrada para este filtro.
-      ${currentFilter === 'all' ? 'Preencha seus palpites na aba Grupos.' : 'Tente selecionar outro filtro.'}
+      Nenhuma aposta encontrada para este filtro na fase atual.
+      ${currentFilter === 'all' ? 'Use a aba Apostar quando a fase estiver liberada.' : 'Tente selecionar outro filtro.'}
     </div>
   `;
  }
 }
 
 function updateTotals(){
+ const data = activeStageData();
  let total = 0;
 
- Object.keys(groups).forEach(group=>{
-   const games = createGames(groups[group]);
+ Object.keys(data).forEach(block=>{
+   const games = getGamesForBlock(block, data[block]);
 
    games.forEach((g,i)=>{
-     const bet = getSavedBet(group,i);
+     const bet = getSavedBet(block,i);
 
      if(bet.a !== undefined && bet.b !== undefined){
-       total += evaluateBet(group,i,bet).points;
+       total += evaluateBet(block,i,bet).points;
      }
    });
  });

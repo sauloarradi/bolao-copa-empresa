@@ -38,6 +38,12 @@
   </button>
 </header>
 
+<div class="phase-card">
+  <span>Fase atual</span>
+  <strong id="currentPhaseName">Fase de Grupos</strong>
+  <small id="phaseStatusText"></small>
+</div>
+
 <div class="deadline-box" id="deadlineBox"></div>
 
 <section class="summary">
@@ -71,14 +77,20 @@
 
   <div class="home-card">
     <h3>Próximos passos</h3>
-    <p>
-      Preencha todos os grupos antes do prazo final. Após o prazo, as apostas ficarão bloqueadas e você poderá apenas acompanhar seus palpites, resultados e pontuação.
-    </p>
+    <p id="nextStepsText"></p>
+  </div>
+
+  <div class="home-card compact-rule-card" onclick="changeScreen('rules')">
+    <h3>📜 Regras do bolão</h3>
+    <p>Consulte pontuação, prazos, funcionamento das fases e critérios de desempate.</p>
   </div>
 </div>
 
 <div id="screen-groups" class="screen hidden">
-  <h3 class="section-title">⚽ Fase de Grupos</h3>
+  <h3 class="section-title" id="gamesScreenTitle">⚽ Apostas da fase atual</h3>
+
+  <div id="closedPhaseMessage" class="empty-state hidden"></div>
+
   <div class="groups-grid" id="groupsGrid"></div>
 </div>
 
@@ -120,11 +132,71 @@
   </div>
 </div>
 
+<div id="screen-rules" class="screen hidden">
+  <h3 class="section-title">📜 Regras do Bolão</h3>
+
+  <div class="rules-grid">
+
+    <div class="rule-card">
+      <h3>🎯 Pontuação</h3>
+      <p><strong>+1 ponto</strong> para quem acertar o vencedor ou empate do jogo.</p>
+      <p><strong>+2 pontos</strong> para quem acertar o placar exato.</p>
+      <small>O placar exato substitui a pontuação de vencedor. Ou seja, placar exato vale 2 pontos no total.</small>
+    </div>
+
+    <div class="rule-card">
+      <h3>⏰ Prazo da fase de grupos</h3>
+      <p>As apostas da fase de grupos poderão ser feitas até <strong>10/06/2026 às 23:59</strong>.</p>
+      <p>Após esse horário, nenhuma alteração será permitida.</p>
+    </div>
+
+    <div class="rule-card">
+      <h3>🔒 Bloqueio de apostas</h3>
+      <p>Após o fechamento de uma fase, os participantes poderão apenas consultar:</p>
+      <ul>
+        <li>palpites realizados;</li>
+        <li>resultados oficiais;</li>
+        <li>pontos feitos em cada jogo;</li>
+        <li>ranking geral.</li>
+      </ul>
+    </div>
+
+    <div class="rule-card">
+      <h3>⚽ Liberação das próximas fases</h3>
+      <p>Após o encerramento da fase atual, o administrador cadastrará os confrontos da próxima fase e liberará novas apostas.</p>
+      <div class="phase-flow">
+        <span>Grupos</span>
+        <span>32-avos</span>
+        <span>Oitavas</span>
+        <span>Quartas</span>
+        <span>Semifinal</span>
+        <span>Final</span>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <h3>🏆 Critérios de desempate</h3>
+      <ol>
+        <li>Maior número de placares exatos;</li>
+        <li>Maior número de acertos de vencedor/empate;</li>
+        <li>Sorteio, caso permaneça empatado.</li>
+      </ol>
+    </div>
+
+    <div class="rule-card">
+      <h3>✅ Transparência</h3>
+      <p>Cada participante poderá acompanhar em “Minhas Apostas” o palpite feito, o resultado oficial e os pontos obtidos em cada jogo.</p>
+    </div>
+
+  </div>
+</div>
+
 <nav class="bottom-nav">
   <button onclick="changeScreen('home')">🏠<span>Início</span></button>
-  <button onclick="changeScreen('groups')">⚽<span>Grupos</span></button>
+  <button onclick="changeScreen('groups')">⚽<span>Apostar</span></button>
   <button onclick="changeScreen('bets')">📋<span>Apostas</span></button>
   <button onclick="changeScreen('ranking')">🏆<span>Ranking</span></button>
+  <button onclick="changeScreen('rules')">📜<span>Regras</span></button>
 </nav>
 
 </div>
