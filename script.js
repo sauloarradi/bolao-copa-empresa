@@ -8,8 +8,8 @@
 // ROUND32_OPEN      = 32-avos aberto para apostas
 // ROUND32_CLOSED    = 32-avos encerrado
 //
-// Para a apresentação ao chefe, altere esta constante para demonstrar os cenários.
-const DEMO_PHASE_STATUS = 'GROUPS_OPEN';
+// Para a apresentação, altere esta constante para demonstrar os cenários.
+const DEMO_PHASE_STATUS = 'GROUPS_CLOSED';
 
 const DEADLINE_GROUPS = new Date('2026-06-10T23:59:59');
 
