@@ -29,3 +29,10 @@ Na versão final:
 - Esse status virá do banco SQL Server.
 - A gestão do bolão poderá encerrar a fase atual, cadastrar os próximos confrontos e liberar a fase seguinte.
 - As apostas serão bloqueadas por fase e por prazo.
+
+
+V7 Admin:
+- Login Admin/RH: usuário admin / senha admin.
+- Painel administrativo com dashboard, lançamento manual de ficha impressa, fases, resultados e auditoria.
+- Funcionários de teste: 1001, 1002, 1003, 1004, 1005.
+- O RH/Admin não usa a senha do funcionário para lançar apostas; o lançamento fica com origem Ficha Impressa/RH e auditoria.

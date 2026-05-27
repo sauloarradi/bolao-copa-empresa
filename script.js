@@ -77,9 +77,10 @@ let currentGroup = '';
 let currentFilter = 'all';
 
 function currentPhase(){
- const selected = phasesData[DEMO_PHASE_STATUS];
+ const phaseStatus = localStorage.getItem('phaseStatus') || DEMO_PHASE_STATUS;
+ const selected = phasesData[phaseStatus];
 
- if(DEMO_PHASE_STATUS === 'GROUPS_OPEN' && new Date() > DEADLINE_GROUPS){
+ if(phaseStatus === 'GROUPS_OPEN' && new Date() > DEADLINE_GROUPS){
   return phasesData.GROUPS_CLOSED;
  }
 
@@ -100,24 +101,61 @@ function isBettingOpen(){
  return currentPhase().open;
 }
 
+let loginMode = 'user';
+let selectedEmployee = null;
+const employees = [
+ {matricula:'1001', nome:'João Silva', setor:'Produção'},
+ {matricula:'1002', nome:'Maria Souza', setor:'RH'},
+ {matricula:'1003', nome:'Carlos Lima', setor:'Expedição'},
+ {matricula:'1004', nome:'Ana Paula', setor:'Qualidade'},
+ {matricula:'1005', nome:'Roberto Santos', setor:'Manutenção'}
+];
+
+function setLoginMode(mode){
+ loginMode = mode;
+ document.getElementById('loginUserBtn').classList.toggle('active', mode === 'user');
+ document.getElementById('loginAdminBtn').classList.toggle('active', mode === 'admin');
+ document.getElementById('matricula').placeholder = mode === 'admin' ? 'Usuário admin' : 'Matrícula';
+ document.getElementById('loginHint').innerText = mode === 'admin'
+  ? 'Admin/RH: use usuário admin e senha admin para testar.'
+  : 'Funcionário: informe qualquer matrícula e senha para testar.';
+}
+
 function login(){
- const m = document.getElementById('matricula').value;
- const s = document.getElementById('senha').value;
+ const m = document.getElementById('matricula').value.trim();
+ const s = document.getElementById('senha').value.trim();
 
  if(!m || !s){
-  alert('Preencha matrícula e senha');
+  alert('Preencha usuário e senha');
   return;
  }
 
+ if(loginMode === 'admin'){
+  if(m.toLowerCase() !== 'admin' || s.toLowerCase() !== 'admin'){
+   alert('Para testar o painel admin, use usuário admin e senha admin.');
+   return;
+  }
+  localStorage.setItem('sessionType','admin');
+  startAdmin();
+  return;
+ }
+
+ localStorage.setItem('sessionType','user');
  localStorage.setItem('user',m);
  start();
+}
+
+function logoutAdmin(){
+ localStorage.removeItem('sessionType');
+ location.reload();
 }
 
 function start(){
  applySavedTheme();
 
  document.getElementById('loginScreen').classList.add('hidden');
- document.getElementById('app').classList.remove('hidden');
+ document.getElementById('adminApp').classList.add('hidden');
+ document.getElementById('userApp').classList.remove('hidden');
 
  document.getElementById('welcome').innerText =
  'Bem-vindo, matrícula ' + localStorage.getItem('user');
@@ -201,12 +239,13 @@ function getGamesForBlock(blockName, teams){
  return createGames(teams);
 }
 
-function gameKey(block, index){
- return currentPhase().key + '_' + block + '_' + index;
+function gameKey(block, index, matricula = null){
+ const user = matricula || localStorage.getItem('user') || 'demo';
+ return 'bet_' + user + '_' + currentPhase().key + '_' + block + '_' + index;
 }
 
-function getSavedBet(block, index){
- return JSON.parse(localStorage.getItem(gameKey(block,index)) || '{}');
+function getSavedBet(block, index, matricula = null){
+ return JSON.parse(localStorage.getItem(gameKey(block,index,matricula)) || '{}');
 }
 
 function renderGroups(){
@@ -376,7 +415,7 @@ function saveGroup(){
 
    localStorage.setItem(
     gameKey(currentGroup,i),
-    JSON.stringify({a,b})
+    JSON.stringify({a,b,origem:'ONLINE',cadastradoPor:localStorage.getItem('user'),data:new Date().toLocaleString('pt-BR')})
    );
  }
 
@@ -385,7 +424,9 @@ function saveGroup(){
  renderBets();
  updateTotals();
 
- alert('Apostas salvas com sucesso.');
+ addAudit('Aposta online salva','Matrícula '+localStorage.getItem('user')+' salvou apostas em '+currentGroup);
+
+    alert('Apostas salvas com sucesso.');
 }
 
 function getDemoResult(block, index){
@@ -506,6 +547,7 @@ function renderBets(){
          <div class="bet-result ${ev.status}">
            ${ev.text} • +${ev.points} ponto${ev.points === 1 ? '' : 's'}
          </div>
+         <div class="game-date">Origem: ${bet.origem === 'PAPEL' ? '📄 Ficha impressa/RH' : '📱 Sistema online'}</div>
        </div>
      `;
    });
@@ -571,10 +613,118 @@ function changeScreen(screen){
  updateTotals();
 }
 
+
+function addAudit(action, detail){
+ const list = JSON.parse(localStorage.getItem('audit') || '[]');
+ list.unshift({action, detail, user:'Admin/RH', date:new Date().toLocaleString('pt-BR')});
+ localStorage.setItem('audit', JSON.stringify(list.slice(0,100)));
+}
+
+function startAdmin(){
+ document.getElementById('loginScreen').classList.add('hidden');
+ document.getElementById('userApp').classList.add('hidden');
+ document.getElementById('adminApp').classList.remove('hidden');
+ document.getElementById('phaseSelect').value = localStorage.getItem('phaseStatus') || DEMO_PHASE_STATUS;
+ renderAdminAll();
+}
+
+function showAdmin(screen, btn){
+ document.querySelectorAll('.admin-screen').forEach(s=>s.classList.add('hidden'));
+ document.getElementById('admin-'+screen).classList.remove('hidden');
+ document.querySelectorAll('.admin-tabs button').forEach(b=>b.classList.remove('active'));
+ btn.classList.add('active');
+ renderAdminAll();
+}
+
+function countEmployeeBets(matricula){
+ const data = activeStageData(); let done=0,total=0;
+ Object.keys(data).forEach(block=>{
+  getGamesForBlock(block,data[block]).forEach((g,i)=>{ total++; const b=getSavedBet(block,i,matricula); if(b.a!==undefined && b.b!==undefined) done++; });
+ });
+ return {done,total};
+}
+
+function renderAdminAll(){
+ renderAdminDashboard(); renderManualGames(); renderResultsGames(); renderAudit();
+}
+
+function renderAdminDashboard(){
+ const data = activeStageData(); let bets=0,online=0,paper=0;
+ employees.forEach(emp=>{
+  Object.keys(data).forEach(block=>{
+   getGamesForBlock(block,data[block]).forEach((g,i)=>{
+    const b=getSavedBet(block,i,emp.matricula); if(b.a!==undefined){bets++; b.origem==='PAPEL'?paper++:online++;}
+   });
+  });
+ });
+ document.getElementById('adminBets').innerText=bets;
+ document.getElementById('adminPhaseName').innerText=currentPhase().title;
+ document.getElementById('onlineBets').innerText=online;
+ document.getElementById('paperBets').innerText=paper;
+ document.getElementById('adminSummaryText').innerText='Fase atual: '+currentPhase().title+'. Status: '+(isBettingOpen()?'apostas abertas':'apostas bloqueadas')+'.';
+ const pending=employees.map(e=>({...e, p:countEmployeeBets(e.matricula)})).filter(e=>e.p.done<e.p.total);
+ document.getElementById('pendingEmployees').innerHTML = pending.length ? pending.map(e=>`<div class="origin-row"><span>${e.nome}<br><small class="muted">Matrícula ${e.matricula}</small></span><strong>${e.p.done}/${e.p.total}</strong></div>`).join('') : '<p class="muted">Todos concluíram a fase atual.</p>';
+}
+
+function searchEmployee(){
+ const term=document.getElementById('employeeSearch').value.trim();
+ selectedEmployee=employees.find(e=>e.matricula===term) || null;
+ const box=document.getElementById('employeeBox'); box.classList.remove('hidden');
+ if(!selectedEmployee){ box.innerHTML='Funcionário não encontrado no protótipo.'; document.getElementById('manualBox').classList.add('hidden'); return; }
+ const p=countEmployeeBets(selectedEmployee.matricula);
+ box.innerHTML=`<strong>${selectedEmployee.nome}</strong><br>Matrícula: ${selectedEmployee.matricula}<br>Setor: ${selectedEmployee.setor}<br>Progresso atual: ${p.done}/${p.total}`;
+ document.getElementById('manualBox').classList.remove('hidden');
+ document.getElementById('manualTitle').innerText='Apostas da ficha impressa - '+selectedEmployee.nome;
+ renderManualGames();
+}
+
+function renderManualGames(){
+ const box=document.getElementById('manualGames'); if(!box || !selectedEmployee){ if(box) box.innerHTML=''; return; }
+ const data=activeStageData(); let html='';
+ Object.keys(data).forEach(block=>{
+  html+=`<h4 style="margin-top:18px;margin-bottom:8px;">${block}</h4>`;
+  getGamesForBlock(block,data[block]).forEach((g,i)=>{ const b=getSavedBet(block,i,selectedEmployee.matricula); html+=`<div class="manual-game"><div class="team-name">${g[0]}</div><input type="number" min="0" id="manual_${block}_${i}_a" value="${b.a ?? ''}"><div>X</div><input type="number" min="0" id="manual_${block}_${i}_b" value="${b.b ?? ''}"><div class="team-name team-right">${g[1]}</div></div>`; });
+ });
+ box.innerHTML=html;
+}
+
+function saveManualBets(){
+ if(!selectedEmployee){alert('Busque um funcionário antes de salvar.');return;}
+ if(!isBettingOpen()){alert('A fase atual está bloqueada. Não é possível lançar apostas sem reabrir a fase.');return;}
+ const data=activeStageData();
+ for(const block of Object.keys(data)){ for(let i=0;i<getGamesForBlock(block,data[block]).length;i++){ const a=document.getElementById(`manual_${block}_${i}_a`).value; const b=document.getElementById(`manual_${block}_${i}_b`).value; if(a===''||b===''){alert('Preencha todos os jogos antes de salvar a ficha.');return;} } }
+ for(const block of Object.keys(data)){ for(let i=0;i<getGamesForBlock(block,data[block]).length;i++){ const a=document.getElementById(`manual_${block}_${i}_a`).value; const b=document.getElementById(`manual_${block}_${i}_b`).value; localStorage.setItem(gameKey(block,i,selectedEmployee.matricula), JSON.stringify({a,b,origem:'PAPEL',cadastradoPor:'Admin/RH',data:new Date().toLocaleString('pt-BR')})); } }
+ addAudit('Aposta impressa lançada','Ficha impressa lançada para '+selectedEmployee.nome+' - matrícula '+selectedEmployee.matricula);
+ alert('Apostas impressas salvas com sucesso.'); renderAdminAll(); searchEmployee();
+}
+
+function saveAdminPhase(){
+ const phase=document.getElementById('phaseSelect').value; localStorage.setItem('phaseStatus',phase);
+ addAudit('Fase alterada','Fase alterada para '+phase);
+ alert('Fase atualizada no protótipo.'); renderAdminAll();
+}
+
+function renderResultsGames(){
+ const box=document.getElementById('resultsGames'); if(!box) return; const data=activeStageData(); let html='';
+ Object.keys(data).forEach(block=>{ html+=`<h4 style="margin-top:18px;margin-bottom:8px;">${block}</h4>`; getGamesForBlock(block,data[block]).forEach((g,i)=>{ const r=JSON.parse(localStorage.getItem(resultKey(block,i))||'{}'); html+=`<div class="result-game"><div class="team-name">${g[0]}</div><input type="number" min="0" id="result_${block}_${i}_a" value="${r.a ?? ''}"><div>X</div><input type="number" min="0" id="result_${block}_${i}_b" value="${r.b ?? ''}"><div class="team-name team-right">${g[1]}</div></div>`; }); });
+ box.innerHTML=html;
+}
+
+function saveAdminResults(){
+ const data=activeStageData();
+ Object.keys(data).forEach(block=>{ getGamesForBlock(block,data[block]).forEach((g,i)=>{ const a=document.getElementById(`result_${block}_${i}_a`).value; const b=document.getElementById(`result_${block}_${i}_b`).value; if(a!==''&&b!=='') localStorage.setItem(resultKey(block,i), JSON.stringify({a,b,atualizadoPor:'Admin/RH',data:new Date().toLocaleString('pt-BR')})); }); });
+ addAudit('Resultado oficial atualizado','Resultados oficiais atualizados para '+currentPhase().title);
+ alert('Resultados salvos com sucesso.'); renderAdminAll();
+}
+
+function renderAudit(){
+ const box=document.getElementById('auditList'); if(!box) return; const list=JSON.parse(localStorage.getItem('audit')||'[]');
+ box.innerHTML=list.length ? list.map(i=>`<div class="audit-item"><strong>${i.action}</strong><small>${i.detail}<br>Usuário: ${i.user} • ${i.date}</small></div>`).join('') : '<p class="muted">Nenhum evento registrado ainda.</p>';
+}
+
 window.onload = ()=>{
  applySavedTheme();
-
- if(localStorage.getItem('user')){
-   start();
- }
+ const session = localStorage.getItem('sessionType');
+ if(session === 'admin') startAdmin();
+ else if(session === 'user' && localStorage.getItem('user')) start();
 }

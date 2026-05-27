@@ -14,18 +14,23 @@
     <h1>⚽ Bolão Copa 2026</h1>
     <p>Bolão oficial da empresa</p>
 
+    <div class="login-tabs">
+      <button id="loginUserBtn" class="active" onclick="setLoginMode('user')">Funcionário</button>
+      <button id="loginAdminBtn" onclick="setLoginMode('admin')">Admin/RH</button>
+    </div>
+
     <input type="text" id="matricula" placeholder="Matrícula">
     <input type="password" id="senha" placeholder="Senha">
 
     <button onclick="login()">Entrar</button>
 
-    <small class="demo-note">
-      Protótipo visual. Na versão final, o login será integrado ao Protheus/TOTVS.
+    <small class="demo-note" id="loginHint">
+      Funcionário: informe qualquer matrícula e senha para testar.
     </small>
   </div>
 </div>
 
-<div class="app hidden" id="app">
+<div class="app hidden" id="userApp">
 
 <header class="app-header">
   <div>
@@ -198,6 +203,81 @@
   <button onclick="changeScreen('ranking')">🏆<span>Ranking</span></button>
   <button onclick="changeScreen('rules')">📜<span>Regras</span></button>
 </nav>
+
+</div>
+
+
+<div class="admin-app hidden" id="adminApp">
+
+<header class="admin-header">
+  <div>
+    <h2>🔐 Painel Administrativo</h2>
+    <span>Usuário: Admin/RH</span>
+  </div>
+  <button class="logout-btn" onclick="logoutAdmin()">Sair</button>
+</header>
+
+<section class="admin-summary">
+  <div class="admin-card stat"><span>Participantes</span><strong id="adminParticipants">5</strong></div>
+  <div class="admin-card stat"><span>Apostas lançadas</span><strong id="adminBets">0</strong></div>
+  <div class="admin-card stat"><span>Fase atual</span><strong id="adminPhaseName">Grupos</strong></div>
+</section>
+
+<nav class="admin-tabs">
+  <button class="active" onclick="showAdmin('dashboard', this)">Dashboard</button>
+  <button onclick="showAdmin('manual', this)">Lançar aposta</button>
+  <button onclick="showAdmin('phases', this)">Fases</button>
+  <button onclick="showAdmin('results', this)">Resultados</button>
+  <button onclick="showAdmin('audit', this)">Auditoria</button>
+</nav>
+
+<div id="admin-dashboard" class="admin-screen">
+  <h3 class="section-title">📊 Dashboard Administrativo</h3>
+  <div class="admin-grid">
+    <div class="admin-card"><h3>Resumo operacional</h3><p id="adminSummaryText" class="muted"></p></div>
+    <div class="admin-card"><h3>Origem das apostas</h3><div class="origin-row"><span>📱 Sistema online</span><strong id="onlineBets">0</strong></div><div class="origin-row"><span>📄 Ficha impressa/RH</span><strong id="paperBets">0</strong></div></div>
+    <div class="admin-card"><h3>Participantes pendentes</h3><div id="pendingEmployees"></div></div>
+  </div>
+</div>
+
+<div id="admin-manual" class="admin-screen hidden">
+  <h3 class="section-title">📄 Lançar aposta impressa</h3>
+  <div class="admin-card">
+    <label class="form-label">Buscar funcionário por matrícula</label>
+    <div class="search-row"><input id="employeeSearch" placeholder="Ex: 1001"><button onclick="searchEmployee()">Buscar</button></div>
+    <div id="employeeBox" class="employee-box hidden"></div>
+  </div>
+  <div id="manualBox" class="admin-card hidden">
+    <h3 id="manualTitle">Apostas da ficha impressa</h3>
+    <p class="muted">Digite todos os placares conforme preenchidos na ficha entregue ao RH.</p>
+    <div id="manualGames"></div>
+    <button class="primary-btn" onclick="saveManualBets()">Salvar apostas impressas</button>
+  </div>
+</div>
+
+<div id="admin-phases" class="admin-screen hidden">
+  <h3 class="section-title">⚽ Gerenciamento de Fases</h3>
+  <div class="admin-card">
+    <p class="muted">No sistema real, esta informação ficará no SQL Server e controlará a abertura/bloqueio das apostas.</p>
+    <select id="phaseSelect">
+      <option value="GROUPS_OPEN">Fase de grupos aberta</option>
+      <option value="GROUPS_CLOSED">Fase de grupos encerrada</option>
+      <option value="ROUND32_OPEN">32-avos aberto</option>
+      <option value="ROUND32_CLOSED">32-avos encerrado</option>
+    </select>
+    <button class="primary-btn" onclick="saveAdminPhase()">Salvar fase</button>
+  </div>
+</div>
+
+<div id="admin-results" class="admin-screen hidden">
+  <h3 class="section-title">🏟️ Gerenciamento de Resultados</h3>
+  <div class="admin-card"><p class="muted">Cadastre os resultados oficiais. Eles alimentam a pontuação dos participantes.</p><div id="resultsGames"></div><button class="primary-btn" onclick="saveAdminResults()">Salvar resultados oficiais</button></div>
+</div>
+
+<div id="admin-audit" class="admin-screen hidden">
+  <h3 class="section-title">🧾 Auditoria Visual</h3>
+  <div class="admin-card"><p class="muted">Registro de ações críticas do protótipo.</p><div id="auditList"></div></div>
+</div>
 
 </div>
 
