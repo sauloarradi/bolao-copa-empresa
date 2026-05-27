@@ -1,14 +1,14 @@
 
-PROTÓTIPO BOLÃO COPA 2026
+Protótipo mobile-first do Bolão Copa 2026.
 
-ATUALIZAÇÕES:
-- Fundo alterado para futebol
-- Sistema separado por grupos
-- Modal para apostas de cada grupo
-- Indicador visual de grupos completos
-- Layout premium responsivo
-- Estrutura preparada para futura integração SQL Server + Protheus
+Novidades:
+- Navegação estilo app
+- Tela Minhas Apostas
+- Barras de progresso
+- Sistema de grupos
+- Modal fullscreen mobile
+- Ranking
+- UX otimizada para celular
 
-IMPORTANTE:
-Os grupos e confrontos utilizados são ilustrativos.
-A FIFA ainda ajusta oficialmente parte do chaveamento e calendário final.
+Obs:
+Os grupos foram baseados nas informações disponíveis publicamente em maio/2026.

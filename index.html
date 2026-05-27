@@ -2,150 +2,111 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bolão Copa 2026</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bolão Copa 2026</title>
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<div class="bg-overlay"></div>
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h1>⚽ Bolão Copa 2026</h1>
+    <p>Bolão oficial da empresa</p>
 
-<div id="loginScreen" class="login-screen">
-    <div class="login-box">
-        <h1>🏆 Bolão Copa do Mundo 2026</h1>
+    <input type="text" id="matricula" placeholder="Matrícula">
+    <input type="password" id="senha" placeholder="Senha">
 
-        <p>
-            Faça seus palpites e acompanhe o ranking em tempo real.
-        </p>
-
-        <input type="text" id="matricula" placeholder="Matrícula">
-        <input type="password" id="senha" placeholder="Senha">
-
-        <button onclick="login()">
-            Entrar
-        </button>
-    </div>
+    <button onclick="login()">Entrar</button>
+  </div>
 </div>
 
-<div id="app" class="hidden">
+<div class="app hidden" id="app">
 
-<header class="topbar">
-
-    <div>
-        <h2>⚽ Copa do Mundo 2026</h2>
-        <span id="welcome"></span>
-    </div>
-
-    <button class="logout-btn" onclick="logout()">
-        Sair
-    </button>
-
+<header>
+  <div>
+    <h2>🏆 Copa do Mundo 2026</h2>
+    <span id="welcome"></span>
+  </div>
 </header>
 
-<section class="dashboard">
+<section class="summary">
+  <div class="summary-card">
+    <span>Pontos</span>
+    <strong>12</strong>
+  </div>
 
-    <div class="dash-card">
-        <h3>Pontuação</h3>
-        <span>0 pts</span>
-    </div>
+  <div class="summary-card">
+    <span>Ranking</span>
+    <strong>#4</strong>
+  </div>
 
-    <div class="dash-card">
-        <h3>Posição</h3>
-        <span>#4</span>
-    </div>
-
-    <div class="dash-card">
-        <h3>Grupos Concluídos</h3>
-        <span id="completedGroups">0/4</span>
-    </div>
-
+  <div class="summary-card">
+    <span>Progresso</span>
+    <strong id="progressText">0%</strong>
+  </div>
 </section>
 
-<section class="info-box">
-    ⚠️ Após finalizar suas apostas elas não poderão mais ser alteradas.
-</section>
+<div id="screen-groups" class="screen">
+  <h3 class="section-title">⚽ Fase de Grupos</h3>
+  <div class="groups-grid" id="groupsGrid"></div>
+</div>
 
-<section>
+<div id="screen-bets" class="screen hidden">
+  <h3 class="section-title">📋 Minhas Apostas</h3>
+  <div id="betsContainer"></div>
+</div>
 
-    <div class="section-title">
-        Fase de Grupos
+<div id="screen-ranking" class="screen hidden">
+  <h3 class="section-title">🏆 Ranking</h3>
+
+  <div class="ranking-item gold">
+    <span>🥇 João Silva</span>
+    <strong>22 pts</strong>
+  </div>
+
+  <div class="ranking-item silver">
+    <span>🥈 Maria Souza</span>
+    <strong>19 pts</strong>
+  </div>
+
+  <div class="ranking-item bronze">
+    <span>🥉 Carlos Lima</span>
+    <strong>18 pts</strong>
+  </div>
+
+  <div class="ranking-item">
+    <span>4º Você</span>
+    <strong>12 pts</strong>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button onclick="changeScreen('groups')">⚽<span>Grupos</span></button>
+  <button onclick="changeScreen('bets')">📋<span>Apostas</span></button>
+  <button onclick="changeScreen('ranking')">🏆<span>Ranking</span></button>
+</nav>
+
+</div>
+
+<div class="modal hidden" id="modal">
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2 id="modalTitle"></h2>
+      <button onclick="closeModal()">✕</button>
     </div>
 
-    <div id="groupsContainer" class="groups-grid"></div>
+    <div id="gamesList"></div>
 
-</section>
-
-<div class="finalize-container">
-    <button class="finalize-btn" onclick="finishBets()">
-        FINALIZAR APOSTAS
+    <button class="save-btn" onclick="saveGroup()">
+      Salvar Apostas
     </button>
+
+  </div>
 </div>
-
-<section>
-
-    <div class="section-title">
-        Ranking Geral
-    </div>
-
-    <div class="ranking">
-
-        <div class="ranking-item gold">
-            <span>🥇 João Silva</span>
-            <strong>28 pts</strong>
-        </div>
-
-        <div class="ranking-item silver">
-            <span>🥈 Maria Souza</span>
-            <strong>25 pts</strong>
-        </div>
-
-        <div class="ranking-item bronze">
-            <span>🥉 Carlos Lima</span>
-            <strong>23 pts</strong>
-        </div>
-
-        <div class="ranking-item">
-            <span>4º Você</span>
-            <strong>0 pts</strong>
-        </div>
-
-    </div>
-
-</section>
-
-</div>
-
-<div id="groupModal" class="modal hidden">
-
-    <div class="modal-content">
-
-        <div class="modal-header">
-
-            <h2 id="modalTitle"></h2>
-
-            <button class="close-btn" onclick="closeModal()">
-                ✖
-            </button>
-
-        </div>
-
-        <div id="modalGames"></div>
-
-        <button class="save-group-btn" onclick="saveGroup()">
-            Salvar Grupo
-        </button>
-
-    </div>
-
-</div>
-
-<script>
-const GROUPS = {"Grupo A": [["🇧🇷 Brasil", "🇨🇭 Suíça"], ["🇲🇽 México", "🇨🇲 Camarões"], ["🇧🇷 Brasil", "🇲🇽 México"], ["🇨🇭 Suíça", "🇨🇲 Camarões"], ["🇧🇷 Brasil", "🇨🇲 Camarões"], ["🇲🇽 México", "🇨🇭 Suíça"]], "Grupo B": [["🇦🇷 Argentina", "🇺🇸 Estados Unidos"], ["🇯🇵 Japão", "🇪🇬 Egito"], ["🇦🇷 Argentina", "🇯🇵 Japão"], ["🇺🇸 Estados Unidos", "🇪🇬 Egito"], ["🇦🇷 Argentina", "🇪🇬 Egito"], ["🇺🇸 Estados Unidos", "🇯🇵 Japão"]], "Grupo C": [["🇫🇷 França", "🇩🇰 Dinamarca"], ["🇸🇳 Senegal", "🇰🇷 Coreia do Sul"], ["🇫🇷 França", "🇸🇳 Senegal"], ["🇩🇰 Dinamarca", "🇰🇷 Coreia do Sul"], ["🇫🇷 França", "🇰🇷 Coreia do Sul"], ["🇩🇰 Dinamarca", "🇸🇳 Senegal"]], "Grupo D": [["🇪🇸 Espanha", "🇺🇾 Uruguai"], ["🇳🇱 Holanda", "🇳🇬 Nigéria"], ["🇪🇸 Espanha", "🇳🇱 Holanda"], ["🇺🇾 Uruguai", "🇳🇬 Nigéria"], ["🇪🇸 Espanha", "🇳🇬 Nigéria"], ["🇺🇾 Uruguai", "🇳🇱 Holanda"]]};
-</script>
 
 <script src="script.js"></script>
-
 </body>
 </html>

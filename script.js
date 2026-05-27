@@ -1,236 +1,248 @@
 
-let currentGroup = null;
-let betsFinished = localStorage.getItem('betsFinished') === 'true';
+const groups = {
+'Grupo A': ['México','África do Sul','Coreia do Sul','Tchéquia'],
+'Grupo B': ['Canadá','Suíça','Qatar','Bósnia'],
+'Grupo C': ['Brasil','Escócia','Marrocos','Haiti'],
+'Grupo D': ['Estados Unidos','Turquia','Austrália','Paraguai'],
+'Grupo E': ['Alemanha','Curacao','Costa do Marfim','Equador'],
+'Grupo F': ['Holanda','Japão','Tunísia','Suécia'],
+'Grupo G': ['Argentina','Nigéria','Dinamarca','Chile'],
+'Grupo H': ['França','Senegal','Peru','Áustria']
+};
+
+let currentGroup = '';
 
 function login(){
+ const m = document.getElementById('matricula').value;
+ const s = document.getElementById('senha').value;
 
-    const matricula = document.getElementById('matricula').value;
-    const senha = document.getElementById('senha').value;
+ if(!m || !s){
+  alert('Preencha matrícula e senha');
+  return;
+ }
 
-    if(!matricula || !senha){
-        alert('Preencha matrícula e senha');
-        return;
-    }
-
-    localStorage.setItem('user', matricula);
-
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('app').classList.remove('hidden');
-
-    document.getElementById('welcome').innerText =
-        `Bem-vindo, matrícula ${matricula}`;
-
-    renderGroups();
+ localStorage.setItem('user',m);
+ start();
 }
 
-function logout(){
-    localStorage.removeItem('user');
-    location.reload();
+function start(){
+ document.getElementById('loginScreen').classList.add('hidden');
+ document.getElementById('app').classList.remove('hidden');
+
+ document.getElementById('welcome').innerText =
+ 'Bem-vindo, matrícula ' + localStorage.getItem('user');
+
+ renderGroups();
+ renderBets();
 }
 
 function renderGroups(){
 
-    const container = document.getElementById('groupsContainer');
+ const grid = document.getElementById('groupsGrid');
+ grid.innerHTML = '';
 
-    container.innerHTML = '';
+ let done = 0;
 
-    const groups = Object.keys(GROUPS);
+ Object.keys(groups).forEach(group=>{
 
-    let completedGroups = 0;
+   const games = createGames(groups[group]);
 
-    groups.forEach(groupName => {
+   let completed = 0;
 
-        const games = GROUPS[groupName];
+   games.forEach((g,i)=>{
+     if(localStorage.getItem(group+'_'+i)){
+       completed++;
+     }
+   });
 
-        let completed = 0;
+   const percent = Math.floor((completed/games.length)*100);
 
-        games.forEach((game, index) => {
+   if(percent === 100){
+     done++;
+   }
 
-            const bet = JSON.parse(localStorage.getItem(`${groupName}_${index}`));
+   grid.innerHTML += `
+   <div class="group-card">
 
-            if(
-                bet &&
-                bet.a !== '' &&
-                bet.b !== '' &&
-                bet.a !== undefined &&
-                bet.b !== undefined
-            ){
-                completed++;
-            }
+     <div class="group-top">
+       <div class="group-title">${group}</div>
+       <div>${percent}%</div>
+     </div>
 
-        });
+     <div>${groups[group].join(' • ')}</div>
 
-        const finished = completed === games.length;
+     <div class="progress">
+       <div class="progress-bar" style="width:${percent}%"></div>
+     </div>
 
-        if(finished){
-            completedGroups++;
-        }
+     <div class="group-status">
+       ${completed}/${games.length} jogos apostados
+     </div>
 
-        container.innerHTML += `
-            <div class="group-card" onclick="openGroup('${groupName}')">
+     <button onclick="openGroup('${group}')">
+       Abrir Grupo
+     </button>
 
-                <div class="group-status">
-                    ${finished ? '✅' : '❌'}
-                </div>
+   </div>
+   `;
+ });
 
-                <h3>${groupName}</h3>
-
-                <div class="group-description">
-                    ${completed}/${games.length} jogos apostados
-                </div>
-
-            </div>
-        `;
-
-    });
-
-    document.getElementById('completedGroups').innerText =
-        `${completedGroups}/${groups.length}`;
+ document.getElementById('progressText').innerText =
+ Math.floor((done/Object.keys(groups).length)*100)+'%';
 }
 
-function openGroup(groupName){
+function createGames(teams){
 
-    currentGroup = groupName;
+ return [
+  [teams[0],teams[1]],
+  [teams[2],teams[3]],
+  [teams[0],teams[2]],
+  [teams[1],teams[3]],
+  [teams[0],teams[3]],
+  [teams[1],teams[2]]
+ ];
+}
 
-    const modal = document.getElementById('groupModal');
+function openGroup(group){
 
-    modal.classList.remove('hidden');
+ currentGroup = group;
 
-    document.getElementById('modalTitle').innerText = groupName;
+ const gamesList = document.getElementById('gamesList');
+ const title = document.getElementById('modalTitle');
 
-    const container = document.getElementById('modalGames');
+ title.innerText = group;
+ gamesList.innerHTML = '';
 
-    container.innerHTML = '';
+ const games = createGames(groups[group]);
 
-    GROUPS[groupName].forEach((game, index) => {
+ games.forEach((g,i)=>{
 
-        const saved =
-            JSON.parse(localStorage.getItem(`${groupName}_${index}`)) || {};
+  const save = JSON.parse(localStorage.getItem(group+'_'+i) || '{}');
 
-        container.innerHTML += `
-            <div class="game-item">
+  gamesList.innerHTML += `
+   <div class="game-card">
 
-                <div class="game-row">
+    <div class="teams">
 
-                    <div class="team-name">
-                        ${game[0]}
-                    </div>
+      <div>${g[0]}</div>
 
-                    <div class="score-area">
+      <input type="number" class="score" id="a_${i}" value="${save.a || ''}">
 
-                        <input
-                            type="number"
-                            class="score-input"
-                            min="0"
-                            id="a_${index}"
-                            value="${saved.a ?? ''}"
-                            ${betsFinished ? 'disabled' : ''}
-                        >
+      <div>X</div>
 
-                        <span>X</span>
+      <input type="number" class="score" id="b_${i}" value="${save.b || ''}">
 
-                        <input
-                            type="number"
-                            class="score-input"
-                            min="0"
-                            id="b_${index}"
-                            value="${saved.b ?? ''}"
-                            ${betsFinished ? 'disabled' : ''}
-                        >
+      <div class="team-right">${g[1]}</div>
 
-                    </div>
+    </div>
 
-                    <div class="team-name" style="text-align:right;">
-                        ${game[1]}
-                    </div>
+    <div class="game-date">
+      Copa do Mundo 2026
+    </div>
 
-                </div>
+   </div>
+  `;
 
-            </div>
-        `;
+ });
 
-    });
-
+ document.getElementById('modal').classList.remove('hidden');
 }
 
 function closeModal(){
-    document.getElementById('groupModal').classList.add('hidden');
+ document.getElementById('modal').classList.add('hidden');
 }
 
 function saveGroup(){
 
-    GROUPS[currentGroup].forEach((game, index) => {
+ const games = createGames(groups[currentGroup]);
 
-        const a = document.getElementById(`a_${index}`).value;
-        const b = document.getElementById(`b_${index}`).value;
+ for(let i=0;i<games.length;i++){
 
-        localStorage.setItem(
-            `${currentGroup}_${index}`,
-            JSON.stringify({a,b})
-        );
+   const a = document.getElementById('a_'+i).value;
+   const b = document.getElementById('b_'+i).value;
 
-    });
+   if(a === '' || b === ''){
+    alert('Preencha todos os jogos.');
+    return;
+   }
 
-    closeModal();
+   localStorage.setItem(
+    currentGroup+'_'+i,
+    JSON.stringify({a,b})
+   );
+ }
 
-    renderGroups();
+ closeModal();
+ renderGroups();
+ renderBets();
 
-    alert('Grupo salvo com sucesso');
+ alert('Apostas salvas com sucesso');
 }
 
-function finishBets(){
+function renderBets(){
 
-    let incomplete = false;
+ const container = document.getElementById('betsContainer');
+ container.innerHTML = '';
 
-    Object.keys(GROUPS).forEach(groupName => {
+ Object.keys(groups).forEach(group=>{
 
-        GROUPS[groupName].forEach((game, index) => {
+   const games = createGames(groups[group]);
 
-            const bet =
-                JSON.parse(localStorage.getItem(`${groupName}_${index}`));
+   games.forEach((g,i)=>{
 
-            if(
-                !bet ||
-                bet.a === '' ||
-                bet.b === '' ||
-                bet.a === undefined ||
-                bet.b === undefined
-            ){
-                incomplete = true;
-            }
+     const save = JSON.parse(localStorage.getItem(group+'_'+i) || '{}');
 
-        });
+     if(save.a !== undefined){
 
-    });
+       let resultClass = 'pending';
+       let resultText = '⏳ Aguardando resultado oficial';
 
-    if(incomplete){
-        alert('Você precisa preencher todos os jogos.');
-        return;
-    }
+       if(i % 4 === 0){
+         resultClass = 'exact';
+         resultText = '🎯 Placar exato • +2 pontos';
+       }else if(i % 3 === 0){
+         resultClass = 'winner';
+         resultText = '✅ Acertou vencedor • +1 ponto';
+       }else if(i % 2 === 0){
+         resultClass = 'error';
+         resultText = '❌ Errou • 0 pontos';
+       }
 
-    if(confirm('Após finalizar as apostas não será mais possível editar. Deseja continuar?')){
+       container.innerHTML += `
+       <div class="bet-item">
 
-        localStorage.setItem('betsFinished', 'true');
+         <strong>${g[0]} x ${g[1]}</strong>
 
-        alert('Apostas finalizadas com sucesso');
+         <div style="margin-top:10px;">
+          Seu palpite:
+          <strong>${save.a} x ${save.b}</strong>
+         </div>
 
-        location.reload();
-    }
+         <div class="bet-result ${resultClass}">
+          ${resultText}
+         </div>
+
+       </div>
+       `;
+     }
+
+   });
+
+ });
+
 }
 
-window.onload = () => {
+function changeScreen(screen){
 
-    const user = localStorage.getItem('user');
+ document.getElementById('screen-groups').classList.add('hidden');
+ document.getElementById('screen-bets').classList.add('hidden');
+ document.getElementById('screen-ranking').classList.add('hidden');
 
-    if(user){
+ document.getElementById('screen-'+screen).classList.remove('hidden');
+}
 
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-
-        document.getElementById('welcome').innerText =
-            `Bem-vindo, matrícula ${user}`;
-
-        renderGroups();
-    }
-
-};
+window.onload = ()=>{
+ if(localStorage.getItem('user')){
+   start();
+ }
+}
