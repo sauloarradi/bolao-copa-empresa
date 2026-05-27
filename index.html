@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -19,22 +18,32 @@
     <input type="password" id="senha" placeholder="Senha">
 
     <button onclick="login()">Entrar</button>
+
+    <small class="demo-note">
+      Protótipo visual. Na versão final, o login será integrado ao Protheus/TOTVS.
+    </small>
   </div>
 </div>
 
 <div class="app hidden" id="app">
 
-<header>
+<header class="app-header">
   <div>
     <h2>🏆 Copa do Mundo 2026</h2>
     <span id="welcome"></span>
   </div>
+
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeButton">
+    🌙 Tema
+  </button>
 </header>
+
+<div class="deadline-box" id="deadlineBox"></div>
 
 <section class="summary">
   <div class="summary-card">
     <span>Pontos</span>
-    <strong>12</strong>
+    <strong id="totalPoints">0</strong>
   </div>
 
   <div class="summary-card">
@@ -48,13 +57,42 @@
   </div>
 </section>
 
-<div id="screen-groups" class="screen">
+<div id="screen-home" class="screen">
+  <h3 class="section-title">🏠 Resumo</h3>
+
+  <div class="home-card">
+    <h3>Status das apostas</h3>
+    <p id="homeStatus"></p>
+
+    <div class="progress big">
+      <div class="progress-bar" id="homeProgressBar"></div>
+    </div>
+  </div>
+
+  <div class="home-card">
+    <h3>Próximos passos</h3>
+    <p>
+      Preencha todos os grupos antes do prazo final. Após o prazo, as apostas ficarão bloqueadas e você poderá apenas acompanhar seus palpites, resultados e pontuação.
+    </p>
+  </div>
+</div>
+
+<div id="screen-groups" class="screen hidden">
   <h3 class="section-title">⚽ Fase de Grupos</h3>
   <div class="groups-grid" id="groupsGrid"></div>
 </div>
 
 <div id="screen-bets" class="screen hidden">
   <h3 class="section-title">📋 Minhas Apostas</h3>
+
+  <div class="filters">
+    <button class="filter active" onclick="setFilter('all', this)">Todos</button>
+    <button class="filter" onclick="setFilter('pending', this)">Pendentes</button>
+    <button class="filter" onclick="setFilter('exact', this)">Placar exato</button>
+    <button class="filter" onclick="setFilter('winner', this)">Vencedor</button>
+    <button class="filter" onclick="setFilter('error', this)">Erros</button>
+  </div>
+
   <div id="betsContainer"></div>
 </div>
 
@@ -76,13 +114,14 @@
     <strong>18 pts</strong>
   </div>
 
-  <div class="ranking-item">
+  <div class="ranking-item mine">
     <span>4º Você</span>
-    <strong>12 pts</strong>
+    <strong id="rankingPoints">0 pts</strong>
   </div>
 </div>
 
 <nav class="bottom-nav">
+  <button onclick="changeScreen('home')">🏠<span>Início</span></button>
   <button onclick="changeScreen('groups')">⚽<span>Grupos</span></button>
   <button onclick="changeScreen('bets')">📋<span>Apostas</span></button>
   <button onclick="changeScreen('ranking')">🏆<span>Ranking</span></button>
@@ -94,13 +133,16 @@
   <div class="modal-content">
 
     <div class="modal-header">
-      <h2 id="modalTitle"></h2>
+      <div>
+        <h2 id="modalTitle"></h2>
+        <small id="modalHint"></small>
+      </div>
       <button onclick="closeModal()">✕</button>
     </div>
 
     <div id="gamesList"></div>
 
-    <button class="save-btn" onclick="saveGroup()">
+    <button class="save-btn" id="saveGroupButton" onclick="saveGroup()">
       Salvar Apostas
     </button>
 
